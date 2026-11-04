@@ -1,0 +1,1255 @@
+"use client";
+
+import { useState, useTransition, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import {
+  logoutAdminAction,
+  updateInquiryStatusAction,
+  deleteInquiryAction,
+} from "@/app/actions/admin";
+import {
+  Users,
+  Search,
+  Filter,
+  Download,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  Clock,
+  Eye,
+  Trash2,
+  LogOut,
+  ExternalLink,
+  ShieldCheck,
+  Building,
+  CheckCircle2,
+  AlertCircle,
+  FileSpreadsheet,
+  X,
+  ChevronDown,
+  Sparkles,
+  RefreshCw,
+  LayoutList,
+  Table,
+  MessageSquare,
+} from "lucide-react";
+import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
+
+export interface InquiryRecord {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  propertyType: string;
+  locationArea: string;
+  configuration: string;
+  budgetRange: string;
+  preferredTimeline: string;
+  message: string | null;
+  status: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+interface AdminDashboardProps {
+  initialInquiries: InquiryRecord[];
+  metrics: {
+    totalVisits: number;
+    uniqueVisits: number;
+  };
+  isPostgresConfigured?: boolean;
+  googleSheetConfig?: {
+    scriptUrl: string | null;
+    sheetId: string | null;
+    sheetUrl: string | null;
+    isConfigured: boolean;
+  };
+}
+
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; badge: string; bg: string; border: string; text: string }
+> = {
+  NEW: {
+    label: "New Inquiry",
+    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    bg: "bg-blue-500",
+    border: "border-blue-300",
+    text: "text-blue-700",
+  },
+  CONTACTED: {
+    label: "Contacted",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    bg: "bg-indigo-500",
+    border: "border-indigo-300",
+    text: "text-indigo-700",
+  },
+  ESTIMATE_SENT: {
+    label: "Estimate Sent",
+    badge: "bg-purple-50 text-purple-700 border-purple-200",
+    bg: "bg-purple-500",
+    border: "border-purple-300",
+    text: "text-purple-700",
+  },
+  WON: {
+    label: "Deal Won",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    bg: "bg-emerald-500",
+    border: "border-emerald-300",
+    text: "text-emerald-700",
+  },
+  CLOSED: {
+    label: "Archived / Closed",
+    badge: "bg-slate-100 text-slate-700 border-slate-300",
+    bg: "bg-slate-500",
+    border: "border-slate-300",
+    text: "text-slate-700",
+  },
+};
+
+// const STORAGE_KEY = "bsi_inquiries_store_v1";
+
+export default function AdminDashboard({
+  initialInquiries,
+  metrics,
+  isPostgresConfigured = false,
+  googleSheetConfig,
+}: AdminDashboardProps) {
+  const router = useRouter();
+  
+  // Initialize with initialInquiries merged with client cache to prevent blank flashes
+  const [inquiries, setInquiries] = useState<InquiryRecord[]>(
+  Array.isArray(initialInquiries) ? initialInquiries : []
+);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Helper to merge new records and persist to localStorage
+ const fetchLiveInquiries = useCallback(async () => {
+  try {
+    const res = await fetch("/api/inquiries", {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        router.push("/admin/login");
+      }
+      throw new Error("Failed to fetch enquiries.");
+    }
+
+    const json = await res.json();
+
+    if (Array.isArray(json.inquiries)) {
+      setInquiries(json.inquiries);
+
+      setSelectedInquiry((current) => {
+        if (!current) return null;
+
+        return (
+          json.inquiries.find(
+            (item: InquiryRecord) => item.id === current.id
+          ) || null
+        );
+      });
+    }
+  } catch (error) {
+    console.error("Enquiry refresh failed:", error);
+  }
+}, [router]);
+
+  // // Live client-side fetch from /api/inquiries to bypass any SSR caching delays
+  // const fetchLiveInquiries = useCallback(async () => {
+  //   try {
+  //     const res = await fetch("/api/inquiries", {
+  //       cache: "no-store",
+  //       headers: { "Cache-Control": "no-cache" },
+  //     });
+  //     if (res.ok) {
+  //       const json = await res.json();
+  //       if (Array.isArray(json.inquiries)) {
+  //         mergeAndPersistInquiries(json.inquiries);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.warn("Client inquiries fetch:", err);
+  //   }
+  // }, [mergeAndPersistInquiries]);
+
+  // Sync component state whenever fresh initialInquiries arrive or on mount
+  // Sync dashboard with enquiries received from the server
+useEffect(() => {
+  setInquiries(Array.isArray(initialInquiries) ? initialInquiries : []);
+}, [initialInquiries]);
+
+  // Live feed auto-sync: Poll for new customer inquiries every 8 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      fetchLiveInquiries();
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [fetchLiveInquiries]);
+
+  // Manual refresh handler
+const handleRefresh = useCallback(async () => {
+  setIsRefreshing(true);
+
+  try {
+    await fetchLiveInquiries();
+    router.refresh();
+  } finally {
+    setIsRefreshing(false);
+  }
+}, [fetchLiveInquiries, router]);
+
+  const [viewMode, setViewMode] = useState<"feed" | "table">("feed");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [selectedPropertyType, setSelectedPropertyType] = useState<string>("ALL");
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryRecord | null>(null);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const showNotification = (type: "success" | "error", text: string) => {
+    setNotification({ type, text });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const exportToCsv = useCallback(() => {
+    if (inquiries.length === 0) {
+      showNotification("error", "No inquiries to export yet.");
+      return;
+    }
+    const headers = [
+      "ID",
+      "Date",
+      "Full Name",
+      "Phone",
+      "Email",
+      "Location / City",
+      "Property Type",
+      "Configuration",
+      "Budget Range",
+      "Preferred Timeline",
+      "Client Message",
+      "Status",
+    ];
+
+    const escapeCsv = (val: string | null | undefined) => {
+      const str = String(val || "").replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvRows = [
+      headers.join(","),
+      ...inquiries.map((inq) =>
+        [
+          escapeCsv(inq.id),
+          escapeCsv(new Date(inq.createdAt).toLocaleDateString("en-IN")),
+          escapeCsv(inq.fullName),
+          escapeCsv(inq.phone),
+          escapeCsv(inq.email),
+          escapeCsv(inq.locationArea),
+          escapeCsv(inq.propertyType),
+          escapeCsv(inq.configuration),
+          escapeCsv(inq.budgetRange),
+          escapeCsv(inq.preferredTimeline),
+          escapeCsv(inq.message || ""),
+          escapeCsv(inq.status),
+        ].join(",")
+      ),
+    ];
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `ARHAM_Enquiries_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showNotification("success", "Exported all leads to CSV! Ready to import or view in Google Sheets.");
+  }, [inquiries]);
+
+ const handleStatusChange = async (id: string, newStatus: string) => {
+  const previousInquiries = inquiries;
+  const previousSelectedInquiry = selectedInquiry;
+
+  // Update the dashboard immediately
+  setInquiries((prev) =>
+    prev.map((item) =>
+      item.id === id ? { ...item, status: newStatus } : item
+    )
+  );
+
+  if (selectedInquiry?.id === id) {
+    setSelectedInquiry({ ...selectedInquiry, status: newStatus });
+  }
+
+  startTransition(async () => {
+    try {
+      const res = await updateInquiryStatusAction(id, newStatus);
+
+      if (res.success) {
+        showNotification(
+          "success",
+          `Enquiry status updated to ${STATUS_CONFIG[newStatus]?.label || newStatus}`
+        );
+
+        await fetchLiveInquiries();
+      } else {
+        setInquiries(previousInquiries);
+        setSelectedInquiry(previousSelectedInquiry);
+
+        showNotification(
+          "error",
+          res.error || "Failed to update enquiry status."
+        );
+      }
+    } catch (error) {
+      setInquiries(previousInquiries);
+      setSelectedInquiry(previousSelectedInquiry);
+
+      showNotification("error", "Something went wrong while updating.");
+    }
+  });
+};
+
+ const handleDelete = async (id: string) => {
+  setDeleteConfirmationId(null);
+
+  const previousInquiries = inquiries;
+  const previousSelectedInquiry = selectedInquiry;
+
+  // Remove the enquiry from the dashboard immediately
+  setInquiries((prev) => prev.filter((item) => item.id !== id));
+
+  if (selectedInquiry?.id === id) {
+    setSelectedInquiry(null);
+  }
+
+  startTransition(async () => {
+    try {
+      const res = await deleteInquiryAction(id);
+
+      if (res.success) {
+        showNotification("success", "Enquiry deleted successfully.");
+        await fetchLiveInquiries();
+      } else {
+        setInquiries(previousInquiries);
+        setSelectedInquiry(previousSelectedInquiry);
+
+        showNotification(
+          "error",
+          res.error || "Failed to delete enquiry."
+        );
+      }
+    } catch (error) {
+      setInquiries(previousInquiries);
+      setSelectedInquiry(previousSelectedInquiry);
+
+      showNotification("error", "Something went wrong while deleting.");
+    }
+  });
+};
+
+  const handleExportCSV = () => {
+    if (inquiries.length === 0) {
+      showNotification("error", "No data to export");
+      return;
+    }
+
+    const headers = [
+      "Inquiry ID",
+      "Full Name",
+      "Email",
+      "Phone",
+      "Property Type",
+      "Locality / Society",
+      "Configuration",
+      "Budget Range",
+      "Preferred Timeline",
+      "Client Requirements",
+      "Status",
+      "Submitted Date",
+      "Submitted Time (IST)",
+    ];
+
+    const rows = inquiries.map((item) => {
+      const dateObj = new Date(item.createdAt);
+      const dateStr = dateObj.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" });
+      const timeStr = dateObj.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
+
+      return [
+        `"${item.id}"`,
+        `"${item.fullName.replace(/"/g, '""')}"`,
+        `"${item.email.replace(/"/g, '""')}"`,
+        `"${item.phone.replace(/"/g, '""')}"`,
+        `"${item.propertyType.replace(/"/g, '""')}"`,
+        `"${item.locationArea.replace(/"/g, '""')}"`,
+        `"${item.configuration.replace(/"/g, '""')}"`,
+        `"${item.budgetRange.replace(/"/g, '""')}"`,
+        `"${item.preferredTimeline.replace(/"/g, '""')}"`,
+        `"${(item.message || "").replace(/"/g, '""')}"`,
+        `"${item.status}"`,
+        `"${dateStr}"`,
+        `"${timeStr}"`,
+      ].join(",");
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute(
+      "download",
+      `ARHAM_Enquiries_${new Date().toISOString().slice(0, 10)}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showNotification("success", "CSV exported successfully (Power BI & Excel ready)");
+  };
+
+  // Filter inquiries based on search and dropdowns
+  const filteredInquiries = inquiries.filter((item) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      item.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.locationArea.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.message && item.message.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesStatus =
+      selectedStatus === "ALL" || item.status === selectedStatus;
+
+    const matchesProperty =
+      selectedPropertyType === "ALL" || item.propertyType === selectedPropertyType;
+
+    return matchesSearch && matchesStatus && matchesProperty;
+  });
+
+  // Calculate high-level KPIs
+  const totalLeads = inquiries.length;
+  const newLeads = inquiries.filter((i) => i.status === "NEW").length;
+  const inProgressLeads = inquiries.filter(
+    (i) => i.status === "CONTACTED" || i.status === "ESTIMATE_SENT"
+  ).length;
+  const wonDeals = inquiries.filter((i) => i.status === "WON").length;
+
+  return (
+    <div className="bg-[#fbfaf7] text-slate-900 min-h-screen pb-24">
+      {/* Top Admin Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
+              <BrandLogo variant="horizontal" size="sm" />
+            </Link>
+            <span className="text-slate-300">|</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#3154A5] text-xs font-bold tracking-wide uppercase">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#3154A5]" />
+              <span>ARHAM Administration</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 ml-auto">
+            <button
+              onClick={exportToCsv}
+              className="text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+              title="Download all customer inquiries as a CSV spreadsheet"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export CSV</span>
+            </button>
+
+            {googleSheetConfig?.sheetUrl && (
+              <a
+                href={googleSheetConfig.sheetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-xs cursor-pointer"
+                title="Open live Google Sheet in Google Drive"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Open in Google Sheets</span>
+                <ExternalLink className="w-3 h-3 text-emerald-500" />
+              </a>
+            )}
+
+            <Link
+              href="/contact"
+              target="_blank"
+              className="text-xs font-semibold text-slate-700 hover:text-[#3154A5] flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-blue-300 bg-white transition-all shadow-xs"
+            >
+              <span>Test Public Contact Form</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+
+            <form action={logoutAdminAction}>
+              <button
+                type="submit"
+                className="text-xs font-semibold text-red-700 hover:text-red-800 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 bg-white transition-all shadow-xs cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div
+            className={`p-4 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-medium ${
+              notification.type === "success"
+                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                : "bg-red-50 border-red-300 text-red-800"
+            }`}
+          >
+            {notification.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            )}
+            <span>{notification.text}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Dashboard Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        {/* Header Greeting */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900">
+              Project Enquiries &amp; Consultations
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-light">
+              Live database stream of contact submissions, architectural floorplan audits, and turnkey quote requests.
+            </p>
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              {googleSheetConfig?.isConfigured && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Google Sheets Synced • Live Across All Devices</span>
+                </span>
+              )}
+              {isPostgresConfigured && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-300 text-blue-800 text-xs font-semibold shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  <span>Neon PostgreSQL Active</span>
+                </span>
+              )}
+              {!googleSheetConfig?.isConfigured && !isPostgresConfigured && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span>Cloud Storage Mode • Add GOOGLE_SHEET_URL to view and sync directly in Google Sheets</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-3.5 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 hover:border-blue-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-60"
+              title="Check for new customer inquiries right now"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#3154A5] ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>{isRefreshing ? "Syncing..." : "Sync Live Feed"}</span>
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className="brand-button px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-2 shadow-md cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV (Power BI / Excel)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* KPI Cards Row */}
+        <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Inquiries</span>
+              <Users className="w-4 h-4 text-[#3154A5]" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-slate-900">
+              {totalLeads}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1 font-light">
+              Enquiries received through the website
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between text-blue-600 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">New Leads</span>
+              <Sparkles className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-blue-700">
+              {newLeads}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1 font-light">
+            Awaiting initial review
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between text-purple-600 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">In Discussion</span>
+              <Clock className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-purple-700">
+              {inProgressLeads}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1 font-light">
+              Under discussion or estimation
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between text-emerald-600 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Deals Won</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-emerald-700">
+              {wonDeals}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1 font-light">
+              Enquiries marked as won
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Unique Visitors</span>
+              <Users className="w-4 h-4 text-[#3154A5]" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 font-mono">
+              {metrics.uniqueVisits.toLocaleString()}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5 text-slate-400" />
+              <span>{metrics.totalVisits.toLocaleString()} Total Pageviews</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Filter & Search Bar */}
+        <div className="mt-8 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative w-full md:w-96">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by client name, email, phone, society..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#3154A5] transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Filter Dropdowns */}
+          <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <span>Status:</span>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white text-slate-800 focus:outline-none focus:border-[#3154A5]"
+              >
+                <option value="ALL">All Statuses ({inquiries.length})</option>
+                <option value="NEW">New ({inquiries.filter((i) => i.status === "NEW").length})</option>
+                <option value="CONTACTED">Contacted ({inquiries.filter((i) => i.status === "CONTACTED").length})</option>
+                <option value="ESTIMATE_SENT">Estimate Sent ({inquiries.filter((i) => i.status === "ESTIMATE_SENT").length})</option>
+                <option value="WON">Won ({inquiries.filter((i) => i.status === "WON").length})</option>
+                <option value="CLOSED">Closed ({inquiries.filter((i) => i.status === "CLOSED").length})</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+              <span>Property:</span>
+              <select
+                value={selectedPropertyType}
+                onChange={(e) => setSelectedPropertyType(e.target.value)}
+                className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white text-slate-800 focus:outline-none focus:border-[#3154A5]"
+              >
+                <option value="ALL">All Types</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Penthouse">Penthouse</option>
+                <option value="Duplex">Duplex</option>
+                <option value="Villa">Villa</option>
+                <option value="Commercial Office">Commercial</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Inquiries Table */}
+        <div className="mt-6 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-serif font-bold text-slate-900 uppercase tracking-wider">
+                All Project Enquiries
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#3154A5] text-xs font-bold">
+                {filteredInquiries.length} Total
+              </span>
+              <span className="text-[11px] text-emerald-600 font-medium hidden sm:flex items-center gap-1.5 ml-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live Feed Active (Newest on Top)</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* View Switcher: Feed (All Responses at Once) vs Table */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setViewMode("feed")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    viewMode === "feed"
+                      ? "bg-white text-[#3154A5] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  title="See all customer responses fully expanded on screen at once"
+                >
+                  <LayoutList className="w-3.5 h-3.5" />
+                  <span>All Responses Feed</span>
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    viewMode === "table"
+                      ? "bg-white text-[#3154A5] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  title="Compact table view"
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span>Table View</span>
+                </button>
+              </div>
+
+              {isPending && (
+                <span className="text-xs text-[#3154A5] font-medium animate-pulse">
+                  Saving updates...
+                </span>
+              )}
+            </div>
+          </div>
+
+          {filteredInquiries.length === 0 ? (
+            <div className="py-20 text-center px-4">
+              <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-slate-800">
+                No Customer Inquiries Yet
+              </h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 font-light">
+                {searchQuery || selectedStatus !== "ALL" || selectedPropertyType !== "ALL"
+                  ? "Try clearing filters to view all stored contact submissions."
+                  : "When prospective homeowners complete the consultation form on /contact, all their responses will appear right here automatically."}
+              </p>
+              {(searchQuery || selectedStatus !== "ALL" || selectedPropertyType !== "ALL") && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedStatus("ALL");
+                    setSelectedPropertyType("ALL");
+                  }}
+                  className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold text-[#3154A5] bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
+                >
+                  Reset All Filters
+                </button>
+              )}
+            </div>
+          ) : viewMode === "feed" ? (
+            /* All Project Enquiries Expanded Feed (See all at once without modals) */
+            <div className="p-4 sm:p-6 space-y-4 bg-slate-50/60 divide-y divide-slate-100">
+              {filteredInquiries.map((inquiry, index) => {
+                const statusObj = STATUS_CONFIG[inquiry.status] || STATUS_CONFIG.NEW;
+                const dateObj = new Date(inquiry.createdAt);
+                const formattedDate = dateObj.toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+                const formattedTime = dateObj.toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <div
+                    key={inquiry.id}
+                    className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden pt-5"
+                  >
+                    {/* Header Strip: Response Number, Customer Name, Status, Date, Actions */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-blue-50 border border-blue-200 text-[#3154A5] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                          #{filteredInquiries.length - index}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg sm:text-xl font-serif font-bold text-slate-900">
+                              {inquiry.fullName}
+                            </h3>
+                            <span className="text-[11px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                              ARHAM-{inquiry.id.slice(0, 6).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-500 font-light">
+                            Submitted on {formattedDate} at {formattedTime} (IST)
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {/* Live Status Selector */}
+                        <div className="relative inline-block">
+                          <select
+                            value={inquiry.status}
+                            onChange={(e) => handleStatusChange(inquiry.id, e.target.value)}
+                            className={`appearance-none text-xs font-semibold py-1.5 pl-3 pr-7 rounded-full border cursor-pointer ${statusObj.badge}`}
+                          >
+                            <option value="NEW">New Inquiry</option>
+                            <option value="CONTACTED">Contacted</option>
+                            <option value="ESTIMATE_SENT">Estimate Sent</option>
+                            <option value="WON">Deal Won</option>
+                            <option value="CLOSED">Archived / Closed</option>
+                          </select>
+                          <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                        </div>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => setDeleteConfirmationId(inquiry.id)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 border border-slate-200 transition-colors cursor-pointer"
+                          title="Delete inquiry permanently"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Direct Contact Links */}
+                    <div className="py-2.5 flex flex-wrap items-center gap-3 text-xs bg-slate-50/70 -mx-5 sm:-mx-6 px-5 sm:px-6 my-2.5 border-y border-slate-100">
+                      <span className="font-semibold text-slate-600">Quick Connect:</span>
+                      <a
+                        href={`tel:${inquiry.phone}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 text-slate-800 font-bold hover:text-[#3154A5] transition-colors shadow-2xs"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-[#3154A5]" />
+                        <span>{inquiry.phone}</span>
+                      </a>
+                      <a
+                        href={`https://wa.me/${inquiry.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                          `Hello ${inquiry.fullName}, this is Akhil Padhihar from ARHAM regarding your inquiry.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-700 font-bold hover:bg-emerald-100 transition-colors shadow-2xs"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>WhatsApp Client</span>
+                      </a>
+                      <a
+                        href={`mailto:${inquiry.email}`}
+                        className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#3154A5] hover:underline"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{inquiry.email}</span>
+                      </a>
+                    </div>
+
+                    {/* 4 Key Details Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                          Project Location
+                        </span>
+                        <div className="font-semibold text-slate-800 flex items-start gap-1 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#3154A5] flex-shrink-0 mt-0.5" />
+                          <span>{inquiry.locationArea}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                          Configuration &amp; Property
+                        </span>
+                        <div className="font-semibold text-slate-900 mt-0.5">
+                          {inquiry.configuration} • {inquiry.propertyType}
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                          Turnkey Budget
+                        </span>
+                        <div className="font-bold text-[#3154A5] text-sm mt-0.5">
+                          ₹{inquiry.budgetRange}
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                          Timeline / Possession
+                        </span>
+                        <div className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
+                          <span>{inquiry.preferredTimeline}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Full Unclipped Message */}
+                    {inquiry.message ? (
+                      <div className="mt-3 p-3.5 rounded-xl bg-blue-50/40 border border-blue-200 text-xs text-slate-800 leading-relaxed">
+                        <strong className="font-semibold text-[#3154A5] block mb-1">
+                          Client Requirements &amp; Notes:
+                        </strong>
+                        <p className="italic font-light">&ldquo;{inquiry.message}&rdquo;</p>
+                      </div>
+                    ) : (
+                      <div className="mt-2 text-[11px] text-slate-400 italic">
+                        No additional custom notes entered.
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Table View */
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                    <th className="py-3.5 px-4 sm:px-6">Client / Organisation</th>
+                    <th className="py-3.5 px-4">Contact</th>
+                    <th className="py-3.5 px-4">Property &amp; Society</th>
+                    <th className="py-3.5 px-4">Scope &amp; Budget</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Submitted</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredInquiries.map((inquiry) => {
+                    const statusObj = STATUS_CONFIG[inquiry.status] || STATUS_CONFIG.NEW;
+                    const dateObj = new Date(inquiry.createdAt);
+                    const formattedDate = dateObj.toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    });
+                    const formattedTime = dateObj.toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <tr
+                        key={inquiry.id}
+                        className="hover:bg-blue-50/30 transition-colors group"
+                      >
+                        {/* Client Name */}
+                        <td className="py-4 px-4 sm:px-6">
+                          <div className="font-semibold text-slate-900 text-sm">
+                            {inquiry.fullName}
+                          </div>
+                          {inquiry.message && (
+                            <p className="text-[11px] text-slate-500 truncate max-w-xs mt-0.5 font-light italic">
+                              &ldquo;{inquiry.message}&rdquo;
+                            </p>
+                          )}
+                        </td>
+
+                        {/* Contact Channels */}
+                        <td className="py-4 px-4">
+                          <div className="space-y-1">
+                            <a
+                              href={`tel:${inquiry.phone}`}
+                              className="flex items-center gap-1.5 text-slate-800 hover:text-[#3154A5] font-medium"
+                            >
+                              <Phone className="w-3 h-3 text-[#3154A5]" />
+                              <span>{inquiry.phone}</span>
+                            </a>
+                            <a
+                              href={`mailto:${inquiry.email}`}
+                              className="flex items-center gap-1.5 text-slate-500 hover:text-[#3154A5] text-[11px] truncate max-w-[180px]"
+                            >
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              <span className="truncate">{inquiry.email}</span>
+                            </a>
+                          </div>
+                        </td>
+
+                        {/* 	Project Details */}
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-slate-900">
+                            {inquiry.configuration} • {inquiry.propertyType}
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                            <span className="truncate max-w-[180px]">{inquiry.locationArea}</span>
+                          </div>
+                        </td>
+
+                        {/* Budget & Timeline */}
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-slate-800">
+                            ₹{inquiry.budgetRange}
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            Timeline: {inquiry.preferredTimeline}
+                          </div>
+                        </td>
+
+                        {/* Live Status Selector */}
+                        <td className="py-4 px-4">
+                          <div className="relative inline-block">
+                            <select
+                              value={inquiry.status}
+                              onChange={(e) => handleStatusChange(inquiry.id, e.target.value)}
+                              className={`appearance-none text-xs font-semibold py-1 pl-2.5 pr-6 rounded-full border cursor-pointer ${statusObj.badge}`}
+                            >
+                              <option value="NEW">New</option>
+                              <option value="CONTACTED">Contacted</option>
+                              <option value="ESTIMATE_SENT">Estimate Sent</option>
+                              <option value="WON">Won</option>
+                              <option value="CLOSED">Closed</option>
+                            </select>
+                            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                          </div>
+                        </td>
+
+                        {/* Submission Date */}
+                        <td className="py-4 px-4 text-slate-500 text-[11px]">
+                          <div>{formattedDate}</div>
+                          <div className="text-[10px] text-slate-400">{formattedTime}</div>
+                        </td>
+
+                        {/* Action Buttons */}
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setSelectedInquiry(inquiry)}
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-[#3154A5] hover:bg-blue-50 border border-slate-200 transition-colors cursor-pointer"
+                              title="View Full Inquiry Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmationId(inquiry.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 border border-slate-200 transition-colors cursor-pointer"
+                              title="Delete Lead"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {selectedInquiry && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setSelectedInquiry(null)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#3154A5]">
+                Inquiry Profile
+              </span>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${STATUS_CONFIG[selectedInquiry.status]?.badge}`}>
+                {STATUS_CONFIG[selectedInquiry.status]?.label}
+              </span>
+            </div>
+
+            <h3 className="text-2xl font-serif font-bold text-slate-900">
+              {selectedInquiry.fullName}
+            </h3>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-y border-slate-100 py-6 text-xs text-slate-700">
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Phone Number
+                </strong>
+                <a
+                  href={`tel:${selectedInquiry.phone}`}
+                  className="text-sm font-bold text-[#3154A5] hover:underline flex items-center gap-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>{selectedInquiry.phone}</span>
+                </a>
+              </div>
+
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Email Address
+                </strong>
+                <a
+                  href={`mailto:${selectedInquiry.email}`}
+                  className="text-sm font-medium text-[#3154A5] hover:underline flex items-center gap-1.5 break-all"
+                >
+                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{selectedInquiry.email}</span>
+                </a>
+              </div>
+
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Project Details
+                </strong>
+                <span className="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{selectedInquiry.locationArea}</span>
+                </span>
+              </div>
+
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Configuration &amp; Type
+                </strong>
+                <span className="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{selectedInquiry.configuration} • {selectedInquiry.propertyType}</span>
+                </span>
+              </div>
+
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Budget Range
+                </strong>
+                <span className="text-sm font-bold text-slate-900">
+                  ₹{selectedInquiry.budgetRange}
+                </span>
+              </div>
+
+              <div>
+                <strong className="block text-slate-500 font-semibold mb-1 uppercase tracking-wider text-[10px]">
+                  Possession / Execution Timeline
+                </strong>
+                <span className="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{selectedInquiry.preferredTimeline}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Client Message */}
+            <div className="mt-6">
+              <strong className="block text-slate-500 font-semibold mb-2 uppercase tracking-wider text-[10px]">
+                Project Requirements &amp; Notes
+              </strong>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 leading-relaxed font-light whitespace-pre-wrap">
+                {selectedInquiry.message || "No custom message provided. Prospective client requested standard architectural consultation."}
+              </div>
+            </div>
+
+            {/* Quick Status Bar */}
+            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 font-medium">Update Status:</span>
+                <select
+                  value={selectedInquiry.status}
+                  onChange={(e) => handleStatusChange(selectedInquiry.id, e.target.value)}
+                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs bg-white font-medium focus:border-[#3154A5]"
+                >
+                  <option value="NEW">New Inquiry</option>
+                  <option value="CONTACTED">Contacted</option>
+                  <option value="ESTIMATE_SENT">Estimate Sent</option>
+                  <option value="WON">Deal Won</option>
+                  <option value="CLOSED">Closed / Archived</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`tel:${selectedInquiry.phone}`}
+                  className="brand-button px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call Client</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmationId && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-serif font-bold text-slate-900 text-center">
+              Delete Lead Record?
+            </h3>
+            <p className="text-xs text-slate-600 text-center mt-2 font-light">
+              This action will remove the inquiry record from the Neon PostgreSQL database. This cannot be undone.
+            </p>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDeleteConfirmationId(null)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirmationId)}
+                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold tracking-wider uppercase shadow-md transition-colors cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

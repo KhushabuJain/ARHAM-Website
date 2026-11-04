@@ -1,0 +1,221 @@
+
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* ARHAM Brand Palette */
+    --brand-navy: #101F3C;
+    --brand-navy-light: #1B3155;
+    --brand-navy-dark: #0B172D;
+
+    --brand-ivory: #F5F3EE;
+    --brand-stone: #E9E6DF;
+    --brand-white: #FFFFFF;
+
+    --brand-gold: #D6B779;
+    --brand-gold-dark: #A78343;
+    --brand-gold-light: #E5CC98;
+
+    --brand-charcoal: #252C35;
+    --brand-text: #454D58;
+    --brand-muted: #626873;
+
+    /* Compatibility variables for existing components */
+    --brand-bg-primary: #FFFFFF;
+    --brand-bg-secondary: #F5F3EE;
+    --brand-bg-tertiary: #E9E6DF;
+
+    --brand-blue-900: #101F3C;
+    --brand-blue-800: #1B3155;
+    --brand-blue-700: #263B5B;
+    --brand-blue-600: #A78343;
+    --brand-blue-500: #D6B779;
+    --brand-blue-400: #E5CC98;
+    --brand-blue-100: #F5F3EE;
+    --brand-blue-50: #FAF9F6;
+
+    --brand-slate-900: #252C35;
+    --brand-slate-800: #343C47;
+    --brand-slate-700: #454D58;
+    --brand-slate-600: #626873;
+    --brand-slate-500: #777D85;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--brand-ivory);
+    color: var(--brand-charcoal);
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Clean, professional typography */
+  .font-serif,
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, sans-serif !important;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ARHAM Brand Gradient Text */
+.brand-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #101F3C 0%,
+    #263B5B 55%,
+    #A78343 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #A78343 0%,
+    #D6B779 55%,
+    #E5CC98 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glass Effect */
+.luxury-glass {
+  background: rgba(245, 243, 238, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(214, 183, 121, 0.18);
+  box-shadow: 0 4px 20px -2px rgba(16, 31, 60, 0.06);
+}
+
+/* Premium Cards */
+.luxury-glass-card {
+  background: #FFFFFF;
+  border: 1px solid #E9E6DF;
+  box-shadow: 0 4px 20px -4px rgba(16, 31, 60, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-glass-card:hover {
+  border-color: rgba(214, 183, 121, 0.7);
+  box-shadow: 0 12px 30px -8px rgba(16, 31, 60, 0.12);
+  transform: translateY(-3px);
+}
+
+/* Subtle Brand Glow */
+.brand-glow {
+  box-shadow: 0 0 25px rgba(16, 31, 60, 0.16);
+}
+
+.gold-glow {
+  box-shadow: 0 0 25px rgba(214, 183, 121, 0.22);
+}
+
+/* Primary Buttons */
+.brand-button {
+  background: linear-gradient(135deg, #101F3C 0%, #1B3155 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.brand-button:hover {
+  background: linear-gradient(135deg, #1B3155 0%, #263B5B 100%);
+  box-shadow: 0 8px 20px -4px rgba(16, 31, 60, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Gold Accent Buttons */
+.gold-button {
+  background: linear-gradient(135deg, #D6B779 0%, #C5A363 100%);
+  color: #101F3C;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.gold-button:hover {
+  background: linear-gradient(135deg, #E5CC98 0%, #D6B779 100%);
+  box-shadow: 0 8px 20px -4px rgba(167, 131, 67, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F3EE;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9C2B5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A78343;
+}
+
+/* 3-Second Hero Banner Progress Fill */
+@keyframes bannerProgress {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+/* ARHAM Cinematic Hero Animations */
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-fade-up {
+  opacity: 0;
+  animation: heroFadeUp 1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.hero-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.hero-delay-2 {
+  animation-delay: 0.45s;
+}
+
+.hero-delay-3 {
+  animation-delay: 0.7s;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .hero-fade-up {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+}

@@ -1,0 +1,45 @@
+import { isAuthenticated } from "@/lib/adminAuth";
+import { redirect } from "next/navigation";
+import { getLiveMetrics } from "@/app/actions/tracker";
+import {
+  getAllInquiries,
+  isPostgresConfigured,
+  getGoogleSheetConfig,
+} from "@/lib/leadStore";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Portal | ARHAM",
+description: "Secure enquiry management and administration portal for ARHAM.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+export default async function AdminPortalPage() {
+  const authed = await isAuthenticated();
+  if (!authed) {
+    redirect("/admin/login");
+  }
+
+  // Fetch authentic customer-submitted inquiries in strict chronological sequence (newest first)
+  const inquiries = await getAllInquiries();
+  const metrics = await getLiveMetrics();
+  const dbConnected = isPostgresConfigured();
+  const sheetConfig = getGoogleSheetConfig();
+
+  return (
+    <AdminDashboard
+      initialInquiries={inquiries}
+      metrics={metrics}
+      isPostgresConfigured={dbConnected}
+      googleSheetConfig={sheetConfig}
+    />
+  );
+}
