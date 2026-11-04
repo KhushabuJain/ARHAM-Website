@@ -213,7 +213,7 @@ export default function Footer() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <Building2 className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-white font-medium">
@@ -223,7 +223,7 @@ export default function Footer() {
                     Akhil Padhiar
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               <Link
                 href="/contact"
