@@ -94,13 +94,13 @@ export default function ContactPage() {
                 </div>
 
                 {/* Contact Person */}
-                <div className="flex items-center gap-4">
+                {/* <div className="flex items-center gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F5F3EE]">
                     <User className="h-5 w-5 text-[#A78343]" />
                   </div>
 
                   
-                </div>
+                </div> */}
 
                 {/* Official Email */}
                 <div className="flex items-center gap-4">
