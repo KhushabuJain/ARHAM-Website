@@ -40,12 +40,12 @@ export default function ContactPage() {
           </div>
 
           <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-tight tracking-tight text-[#101F3C] sm:text-5xl lg:text-6xl">
-            Let's Discuss Your{" "}
+            Lets Discuss Your{" "}
             <span className="gold-gradient-text">Next Project</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base font-light leading-relaxed text-[#626873] sm:text-lg">
-            Connect with ARHAM's leadership team, led by Akhil Padhiar, to
+            Connect with ARHAMs leadership team, led by Akhil Padhiar, to
             discuss your architectural, structural, and construction
             requirements. We look forward to understanding your project.
           </p>
@@ -99,14 +99,7 @@ export default function ContactPage() {
                     <User className="h-5 w-5 text-[#A78343]" />
                   </div>
 
-                  <div>
-                    <strong className="mb-1 block font-semibold text-[#101F3C]">
-                      Contact Person
-                    </strong>
-                    <span className="font-medium text-[#454D58]">
-                      Akhil Padhiar
-                    </span>
-                  </div>
+                  
                 </div>
 
                 {/* Official Email */}
@@ -138,7 +131,7 @@ export default function ContactPage() {
                     <strong className="mb-1 block font-semibold text-[#101F3C]">
                       Business Hours
                     </strong>
-                    <span>Monday – Saturday: 10:00 AM – 8:00 PM</span>
+                    <span>Monday – Saturday: 10:00 AM – 6:00 PM</span>
                     <span className="mt-1 block text-xs text-[#777D85]">
                       Sunday by prior appointment
                     </span>

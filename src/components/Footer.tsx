@@ -88,13 +88,13 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <span className="text-blue-400 text-xs font-semibold tracking-[0.2em] uppercase">
-              Let's Build Together
+              Lets Build Together
             </span>
             <h2 className="text-2xl sm:text-3xl font-semibold mt-3">
               Have a project in mind?
             </h2>
             <p className="text-slate-400 text-sm mt-2">
-              Let's discuss your engineering and construction requirements.
+              Lets discuss your engineering and construction requirements.
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function Footer() {
               execution under one coordinated approach.
             </p>
 
-            <div className="mt-7">
+            {/* <div className="mt-7">
               <span className="text-xs text-slate-500 uppercase tracking-widest">
                 Leadership
               </span>
@@ -145,7 +145,7 @@ export default function Footer() {
               <p className="text-slate-400 text-xs mt-1">
                 Chief Executive Officer
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Navigation */}
