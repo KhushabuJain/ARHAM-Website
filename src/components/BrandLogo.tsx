@@ -10,12 +10,11 @@ export default function BrandLogo({
   className = "",
   size = "md",
 }: BrandLogoProps) {
-  const logoSizes = {
-    sm: "w-[125px] sm:w-[145px]",
-    md: "w-[145px] sm:w-[165px]",
-    lg: "w-[155px] sm:w-[180px] lg:w-[190px]",
-  };
-
+ const logoSizes = {
+  sm: "w-[115px] sm:w-[130px]",
+  md: "w-[130px] sm:w-[145px]",
+  lg: "w-[140px] sm:w-[155px] lg:w-[165px]",
+};
   if (variant === "icon-only") {
     return (
       <img
@@ -41,7 +40,7 @@ export default function BrandLogo({
         alt="ARHAM Engineering & Construction"
         loading="eager"
         decoding="async"
-        className={`${logoSizes[size]} h-auto max-h-28 shrink-0 object-contain`}
+        className={`${logoSizes[size]} h-auto max-h-18 shrink-0 object-contain`}
       />
     </div>
   );

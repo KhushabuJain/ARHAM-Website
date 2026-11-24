@@ -69,7 +69,7 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Services", href: "/turnkey-services" },
-    // { name: "Portfolio", href: "/portfolio" },
+    { name: "Portfolio", href: "/portfolio" },
     // { name: "Testimonials", href: "/testimonials" },
     { name: "Contact", href: "/contact" },
   ];
@@ -89,10 +89,10 @@ export default function Navbar() {
     >
       {/* Main Navbar */}
       <div className={`transition-all duration-300 ${navBackground}`}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-5 sm:px-7 lg:px-8">
           <div
             className={`flex items-center justify-between gap-4 transition-all duration-300 ${
-              isScrolled ? "py-2" : "py-3"
+              isScrolled ? "py-1" : "py-1.5"
             }`}
           >
             {/* Brand Logo */}
@@ -100,11 +100,11 @@ export default function Navbar() {
               href="/"
               className="group flex shrink-0 items-center transition-opacity hover:opacity-90"
             >
-              <BrandLogo variant="horizontal" size="lg" />
+              <BrandLogo variant="horizontal" size="md" />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden items-center gap-5 lg:flex xl:gap-7">
+            <nav className="hidden items-center gap-4 lg:flex xl:gap-6">
               {navLinks.map((link) => {
                 const isActive =
                   link.href === "/"
@@ -132,7 +132,7 @@ export default function Navbar() {
             <div className="hidden shrink-0 items-center md:flex">
               <Link
                 href="/contact"
-                className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#A78343] via-[#E5CC98] to-[#D6B779] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-[#101F3C] shadow-[0_4px_18px_rgba(214,183,121,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_7px_25px_rgba(214,183,121,0.35)]"
+                className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#A78343] via-[#E5CC98] to-[#D6B779] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#101F3C] shadow-[0_4px_18px_rgba(214,183,121,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_7px_25px_rgba(214,183,121,0.35)]"
               >
                 <span className="relative z-10">Consultation</span>
                 <ArrowRight className="relative z-10 h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />

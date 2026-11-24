@@ -3,6 +3,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createInquiry } from "@/lib/leadStore";
+import { sendInquiryEmails } from "@/lib/resend";
 
 export interface InquiryFormData {
   fullName: string;
@@ -31,7 +32,12 @@ export async function submitLeadInquiry(data: InquiryFormData) {
       };
     }
 
-    if (fullName.length > 120 || phone.length > 25 || email.length > 254) {
+    if (
+      fullName.length > 120 ||
+      phone.length > 25 ||
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
       return {
         success: false,
         error: "Please check your details and try again.",
@@ -48,6 +54,7 @@ export async function submitLeadInquiry(data: InquiryFormData) {
       data.message?.trim() ||
       "";
 
+    // 1. Save enquiry in Neon first
     const inquiryId = await createInquiry({
       fullName,
       email,
@@ -60,13 +67,31 @@ export async function submitLeadInquiry(data: InquiryFormData) {
       message: resolvedEnquiry,
     });
 
+    // 2. Send emails without risking the saved enquiry
+    try {
+      await sendInquiryEmails({
+        fullName,
+        email,
+        phone,
+        propertyType: data.propertyType || "Not Specified",
+        locationArea: resolvedAddress,
+        configuration: data.configuration || "Not Specified",
+        budgetRange: data.budgetRange || "Not Specified",
+        preferredTimeline: data.preferredTimeline || "Not Specified",
+        message: resolvedEnquiry,
+        inquiryId,
+      });
+    } catch (emailError) {
+      console.error("ARHAM email sending failed:", emailError);
+    }
+
+    // 3. Refresh website pages
     revalidatePath("/contact");
     revalidatePath("/admin");
 
-    return {
-      success: true,
-      inquiryId,
-    };
+    // 4. Return existing success response
+    return { success: true, inquiryId };
+
   } catch (error) {
     console.error("Inquiry submission failed:", error);
 

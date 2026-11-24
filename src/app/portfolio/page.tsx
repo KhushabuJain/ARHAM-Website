@@ -18,7 +18,7 @@ import { getSafeAllProjects } from "@/lib/fallbackData";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Our Projects | ARHAM – Engineering & Construction",
+  title: "Our Projects | ARHAM – Design & Construction",
   description:
     "Explore engineering, building construction and turnkey project experience across industrial and commercial developments with ARHAM.",
   keywords: [
@@ -95,7 +95,7 @@ export default async function PortfolioPage() {
             Our Portfolio
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif font-bold mt-3">
-            Engineering & Construction Experience
+            Design & Construction Experience
           </h2>
           <p className="mt-4 text-sm text-slate-600 max-w-2xl mx-auto">
             A showcase of the team's project experience, technical
@@ -237,7 +237,7 @@ export default async function PortfolioPage() {
                     <div className="mt-8 pt-6 border-t border-slate-100">
 
                       <p className="text-xs text-slate-500 mb-4">
-                        Looking for engineering and construction
+                        Looking for Design and construction
                         solutions for your next project?
                       </p>
 
@@ -264,7 +264,7 @@ export default async function PortfolioPage() {
               Our Project Portfolio
             </h3>
             <p className="text-sm text-slate-500 mt-3 max-w-lg mx-auto">
-              Our team's engineering and construction experience
+              Our team's Design and construction experience
               reflects our commitment to integrated building solutions.
               Project showcases will be updated as approved details
               become available.
@@ -295,7 +295,7 @@ export default async function PortfolioPage() {
 
           <p className="mt-4 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Whether you are planning an industrial facility or a
-            commercial building, ARHAM brings engineering,
+            commercial building, ARHAM brings design,engineering,
             construction and turnkey solutions together under
             one coordinated approach.
           </p>

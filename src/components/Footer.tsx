@@ -1,11 +1,10 @@
-
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
   MapPin,
   Phone,
   Mail,
-  Building2,
   DraftingCompass,
   Layers3,
   Wind,
@@ -17,13 +16,14 @@ import {
   Network,
   ClipboardList,
   HardHat,
+  MessageCircle,
 } from "lucide-react";
 
 const navigationLinks = [
   { name: "Home", href: "/" },
   { name: "About Us", href: "/about" },
   { name: "Services", href: "/turnkey-services" },
-  //{ name: "Portfolio", href: "/portfolio" },
+  { name: "Portfolio", href: "/portfolio" },
   { name: "Contact Us", href: "/contact" },
 ];
 
@@ -79,7 +79,12 @@ const services = [
     icon: HardHat,
   },
 ];
+const OFFICE_ADDRESS =
+  "C-1104, The First, Avenue Road, behind Keshavbaug Party Plot, off 132ft Road, I I M, Vastrapur, Ahmedabad, Gujarat 380015";
 
+const MAPS_URL =
+  "https://www.google.com/maps/search/?api=1&query=" +
+  encodeURIComponent(OFFICE_ADDRESS);
 export default function Footer() {
   return (
     <footer className="bg-[#101a2b] text-white">
@@ -114,19 +119,16 @@ export default function Footer() {
 
           {/* Brand Column */}
           <div className="lg:col-span-4">
-            <Link href="/" className="inline-flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center">
-                <Building2 className="w-7 h-7 text-[#3154a5]" />
-              </div>
-              <div>
-                <span className="text-3xl font-extrabold tracking-[0.16em]">
-                  ARHAM
-                </span>
-                <span className="block text-[9px] tracking-[0.25em] text-blue-300 uppercase">
-                  Engineering & Construction
-                </span>
-              </div>
-            </Link>
+           <Link href="/" className="inline-flex items-center">
+  <Image
+    src="/arham-logo.png"
+    alt="ARHAM - Engineering Solutions"
+    width={220}
+    height={90}
+    priority
+    className="w-[190px] h-auto object-contain object-left"
+  />
+</Link>
 
             <p className="text-slate-400 text-sm leading-7 mt-7 max-w-sm">
               ARHAM delivers integrated engineering solutions for
@@ -199,6 +201,9 @@ export default function Footer() {
             <h3 className="text-sm font-bold uppercase tracking-widest text-white border-b border-blue-500/40 pb-4">
               Get In Touch
             </h3>
+
+
+
 
             <div className="mt-6 space-y-6">
               <div className="flex items-start gap-3">

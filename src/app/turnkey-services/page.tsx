@@ -446,85 +446,99 @@ export default function TurnkeyServicesPage() {
           </div>
         </div>
       </section>
+{/* OUR APPROACH */}
+<section className="relative isolate overflow-hidden bg-[#101F3C] py-28 text-white sm:py-36">
+  {/* BACKGROUND IMAGE */}
+  <Image
+    src="/images/services/architectural-design.jpg"
+    alt="Industrial building architecture and engineering"
+    fill
+    priority
+    sizes="100vw"
+    className="z-0 object-cover object-center"
+  />
+  {/* DARK OVERLAY */}
+  <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#101F3C]/90 via-[#101F3C]/75 to-[#101F3C]/50" />
+  {/* MAIN CONTENT WRAPPER */}
+  <div className="relative z-20 mx-auto grid max-w-7xl items-center gap-14 px-6 sm:px-10 lg:grid-cols-[1.3fr_0.7fr] lg:px-12">
+    {/* MAIN CONTENT */}
+    <div className="max-w-3xl">
+      <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D6B779]">
+        Our Approach
+      </span>
+      <h2 className="mt-6 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+        Engineering with Purpose.
+        <span className="block text-[#D6B779]">
+          Building with Vision.
+        </span>
+      </h2>
+      <p className="mt-8 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
+        ARHAM delivers integrated engineering and turnkey
+        construction solutions for industrial and commercial
+        building projects.
+      </p>
 
-      {/* INTRODUCTION */}
-      <section className="bg-[#F5F3EE] py-24 sm:py-28">
-        <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 sm:px-10 lg:grid-cols-2 lg:px-12">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#A98543]">
-              Who We Are
-            </span>
+      <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300">
+        We bring architectural design, structural engineering,
+        building services, procurement and construction
+        coordination together through a connected project
+        approach. Our focus is to align technical planning,
+        resources and execution with the requirements of
+        every project.
+      </p>
 
-            <h2 className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-[#15243a] sm:text-5xl">
-              Beyond Engineering.
-              <br />
-              <span className="text-[#A98543]">
-                Complete Project Solutions.
-              </span>
-            </h2>
+      <Link
+        href="/about"
+        className="mt-10 inline-flex items-center gap-3 border-b border-[#D6B779] pb-2 text-sm font-semibold text-white transition-all hover:gap-5 hover:text-[#D6B779]"
+      >
+        Discover ARHAM
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
 
-            <p className="mt-7 text-base leading-8 text-slate-600">
-              ARHAM delivers integrated engineering and turnkey
-              construction solutions for industrial and commercial
-              building projects.
-            </p>
+    {/* APPROACH HIGHLIGHTS */}
+    <div className="border-l border-white/25 pl-7 sm:pl-10">
+      {[
+        {
+          number: "01",
+          title: "Design & Engineering",
+          description: "Planning solutions around building and operational requirements."
+        },
+        {
+          number: "02",
+          title: "Resource Coordination",
+          description: "Connecting project specifications with materials and resources."
+        },
+        {
+          number: "03",
+          title: "Construction & Delivery",
+          description: "Coordinating construction activities through project completion."
+        }
+      ].map((item) => (
+        <div
+          key={item.number}
+          className="border-b border-white/20 py-7 first:pt-0 last:border-0"
+        >
+          <span className="text-sm font-semibold tracking-widest text-[#D6B779]">
+            {item.number}
+          </span>
 
-            <p className="mt-4 text-base leading-8 text-slate-600">
-              By bringing engineering, procurement and construction
-              together, we follow a coordinated approach to project
-              development. Our focus is to align technical planning,
-              project resources and construction activities with
-              the requirements of every project.
-            </p>
+          <h3 className="mt-3 text-xl font-semibold text-white">
+            {item.title}
+          </h3>
 
-            <Link
-              href="/about"
-              className="mt-8 inline-flex items-center gap-3 text-sm font-bold text-[#8F6F32] transition hover:gap-5"
-            >
-              Know More About ARHAM
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="relative">
-            <div className="absolute -right-4 -top-4 h-full w-full rounded-3xl border border-[#E9E6DF]" />
-
-            <div className="relative overflow-hidden rounded-3xl bg-[#152a43] p-8 text-white sm:p-12">
-              <Building2 className="mb-12 h-12 w-12 text-[#D6B779]" />
-
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#D6B779]">
-                Our Core Focus
-              </span>
-
-              <h3 className="mt-5 text-3xl font-semibold leading-snug sm:text-4xl">
-                Building solutions through connected expertise.
-              </h3>
-
-              <p className="mt-6 text-sm leading-7 text-slate-300">
-                Bringing different engineering disciplines and
-                project activities together to support industrial
-                and commercial development.
-              </p>
-
-              <div className="mt-10 grid grid-cols-2 gap-4">
-                {[
-                  "Industrial Buildings",
-                  "Commercial Buildings",
-                  "Engineering",
-                  "Construction",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="border-l-2 border-[#D6B779] py-2 pl-4 text-sm text-slate-200"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <p className="mt-3 text-sm leading-7 text-slate-300">
+            {item.description}
+          </p>
         </div>
-      </section>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+
+
 
       {/* EPC SERVICES */}
       <section className="bg-[#101F3C] py-24 text-white sm:py-28">
@@ -609,204 +623,160 @@ export default function TurnkeyServicesPage() {
           </div>
         </div>
       </section>
+{/* ENGINEERING EXPERTISE */}
+<section
+  id="our-services"
+  className="relative isolate overflow-hidden bg-[#101F3C] py-24 text-white sm:py-28"
+>
+  {/* BACKGROUND IMAGE */}
+  <Image
+    src="/images/services/engineering-expertise-bg.png"
+    alt="Modern industrial engineering facility"
+    fill
+    sizes="100vw"
+    priority
+    className="z-0 object-cover object-[center_95%]"
+  />
+  {/* NAVY OVERLAY - REDUCED TO SHOW THE IMAGE */}
+  <div className="absolute inset-0 z-10 bg-[#101F3C]/55" />
+  <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#101F3C]/45 via-[#101F3C]/25 to-[#101F3C]/70" />
+  <div className="relative z-20 mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
+    {/* SECTION INTRODUCTION */}
+    <div className="mb-16 max-w-3xl">
+      <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D6B779]">
+        Design & Engineering
+      </span>
+      <h2 className="mt-5 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
+        Engineering Capabilities.
+        <span className="block text-[#D6B779]">
+          Built Around Your Project.
+        </span>
+      </h2>
 
-      {/* ENGINEERING SERVICES */}
-      <section
-        id="our-services"
-        className="bg-white py-24 sm:py-28"
-      >
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
-          <div className="mb-20 max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#A98543]">
-              Our Engineering Expertise
-            </span>
+      <p className="mt-6 max-w-2xl text-base leading-8 text-slate-200">
+        From architectural planning and structural systems to
+        building services and site infrastructure, ARHAM brings
+        multiple engineering disciplines together to support
+        industrial and commercial developments.
+      </p>
+    </div>
 
-            <h2 className="mt-5 text-3xl font-semibold leading-tight text-[#15243a] sm:text-5xl">
-              Complete Engineering Solutions.
-              <span className="text-[#A98543]">
-                {" "}One Integrated Approach.
+    {/* SERVICE GRID */}
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {engineeringServices.map((service) => {
+        const Icon = service.icon;
+
+        return (
+          <article
+            key={service.number}
+            id={service.id}
+            className={`group flex h-full scroll-mt-28 flex-col overflow-hidden border border-white/20 bg-[#101F3C]/75 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:border-[#D6B779]/70 hover:bg-[#101F3C]/90 ${
+              service.number === "10" ? "lg:col-start-2" : ""
+            }`}
+          >
+
+            {/* SERVICE IMAGE */}
+            <div className="relative h-40 overflow-hidden bg-[#15243a]">
+              <Image
+                src={service.image}
+                alt={service.imageAlt}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-[#101F3C]/80 via-transparent to-transparent" />
+
+              <span className="absolute bottom-4 left-5 text-xs font-bold tracking-[0.2em] text-[#D6B779]">
+                {service.number}
               </span>
-            </h2>
 
-            <p className="mt-6 text-base leading-8 text-slate-600">
-              Explore ARHAM's engineering capabilities across architectural
-              design, structural engineering, building services, civil
-              engineering and project management.
-            </p>
-          </div>
-
-          <div className="space-y-24 sm:space-y-32">
-            {engineeringServices.map((service) => {
-              const Icon = service.icon;
-
-              return (
-                <article
-                  key={service.number}
-                  id={service.id}
-                  className="scroll-mt-28"
-                >
-                  <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-                    {/* SERVICE IMAGE */}
-                    <div
-                      className={`relative min-h-[300px] h-[350px] sm:h-[420px] lg:h-full lg:min-h-[520px] overflow-hidden rounded-2xl bg-[#E9E6DF] ${
-                        service.imageSide === "right"
-                          ? "lg:order-2"
-                          : "lg:order-1"
-                      }`}
-                    >
-                      <Image
-                        src={service.image}
-                        alt={service.imageAlt}
-                        fill
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                        className="object-cover transition duration-700 hover:scale-105"
-                      />
-
-                      <div className="absolute bottom-5 left-5 rounded-lg bg-[#101F3C]/90 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm">
-                        ARHAM Engineering Solutions
-                      </div>
-                    </div>
-
-                    {/* SERVICE CONTENT */}
-                    <div
-                      className={
-                        service.imageSide === "right"
-                          ? "lg:order-1"
-                          : "lg:order-2"
-                      }
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold tracking-[0.2em] text-[#A98543]">
-                          SERVICE {service.number}
-                        </span>
-
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F5F3EE] text-[#8F6F32]">
-                          <Icon className="h-6 w-6" strokeWidth={1.6} />
-                        </div>
-                      </div>
-
-                      <p className="mt-7 text-[10px] font-bold tracking-[0.2em] text-[#A98543]">
-                        {service.subtitle}
-                      </p>
-
-                      <h3 className="mt-4 text-2xl font-semibold leading-tight text-[#15243a] sm:text-4xl">
-                        {service.title}
-                      </h3>
-
-                      <p className="mt-6 text-base leading-8 text-slate-600">
-                        {service.description}
-                      </p>
-
-                      <p className="mt-4 text-sm leading-8 text-slate-600">
-                        {service.details}
-                      </p>
-
-                      <div className="mt-6 rounded-xl border-l-4 border-[#D6B779] bg-[#F5F3EE] p-5">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-[#15243a]">
-                          Our Approach
-                        </h4>
-
-                        <p className="mt-3 text-sm leading-7 text-slate-600">
-                          {service.approach}
-                        </p>
-                      </div>
-
-                      <div className="mt-8 border-t border-[#E9E6DF] pt-7">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-[#15243a]">
-                          Scope of Services
-                        </h4>
-
-                        <ul className="mt-5 grid gap-4 sm:grid-cols-2">
-                          {service.points.map((point) => (
-                            <li
-                              key={point}
-                              className="flex items-start gap-3 text-sm leading-6 text-slate-600"
-                            >
-                              <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[#A98543]" />
-                              {point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <Link
-                        href="/contact"
-                        className="mt-9 inline-flex items-center gap-3 rounded-full bg-[#101F3C] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#D6B779] hover:text-[#101F3C]"
-                      >
-                        Discuss Your Requirements
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* PROCUREMENT */}
-      <section className="bg-[#F5F3EE] py-24 sm:py-28">
-        <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 sm:px-10 lg:grid-cols-2 lg:px-12">
-          <div className="relative overflow-hidden rounded-3xl bg-[#152a43] p-9 text-white sm:p-14">
-            <Boxes className="mb-12 h-12 w-12 text-[#D6B779]" />
-
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#D6B779]">
-              Procurement Solutions
-            </span>
-
-            <h2 className="mt-5 text-3xl font-semibold leading-tight sm:text-4xl">
-              The Right Resources.
-              <br />
-              For Every Project.
-            </h2>
-
-            <p className="mt-6 text-sm leading-8 text-slate-300">
-              Procurement is an essential part of successful
-              construction delivery. ARHAM coordinates construction
-              materials, equipment and project resources according
-              to project specifications and requirements.
-            </p>
-
-            <div className="mt-9 flex items-center gap-3 border-t border-white/15 pt-7">
-              <CheckCircle2 className="h-5 w-5 text-[#D6B779]" />
-              <span className="text-sm text-slate-200">
-                Procurement and project resource coordination
-              </span>
+              <div className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center border border-white/30 bg-[#101F3C]/85 text-[#D6B779] backdrop-blur-sm">
+                <Icon className="h-5 w-5" strokeWidth={1.6} />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#A98543]">
-              Resource Management
-            </span>
+            {/* SERVICE INFORMATION */}
+            <div className="flex flex-1 flex-col p-5">
 
-            <h2 className="mt-5 text-3xl font-semibold leading-tight text-[#15243a] sm:text-5xl">
-              Supporting Project Execution Through Procurement.
-            </h2>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#D6B779]">
+                {service.subtitle}
+              </p>
 
-            <p className="mt-7 text-base leading-8 text-slate-600">
-              Construction projects depend on the availability
-              and coordination of appropriate materials, equipment
-              and resources.
-            </p>
+              <h3 className="mt-3 text-xl font-semibold leading-snug text-white">
+                {service.title}
+              </h3>
 
-            <p className="mt-4 text-base leading-8 text-slate-600">
-              Our procurement approach connects project requirements
-              with the resources needed to support construction
-              activities and overall project coordination.
-            </p>
+              <p className="mt-3 text-sm leading-6 text-slate-200">
+                {service.description}
+              </p>
 
-            <Link
-              href="/contact"
-              className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#101F3C] px-7 py-4 text-sm font-semibold text-white transition hover:bg-[#D6B779] hover:text-[#101F3C]"
-            >
-              Discuss Procurement Requirements
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+              {/* EXPANDABLE INFORMATION */}
+              <details className="group/details mt-6 border-t border-white/20 pt-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-white transition-colors hover:text-[#D6B779] [&::-webkit-details-marker]:hidden">
+                  <span>Explore Service Details</span>
+
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-white/20 text-[#D6B779] transition-transform duration-300 group-open/details:rotate-45">
+                    <span className="text-xl leading-none">+</span>
+                  </span>
+                </summary>
+
+                <div className="pt-5">
+                  <p className="text-sm leading-7 text-slate-200">
+                    {service.details}
+                  </p>
+
+                  <div className="mt-5 border-l-2 border-[#D6B779] bg-white/[0.08] p-5">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-[#D6B779]">
+                      Our Approach
+                    </h4>
+
+                    <p className="mt-3 text-sm leading-7 text-slate-200">
+                      {service.approach}
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-[#D6B779]">
+                      Scope of Services
+                    </h4>
+
+                    <ul className="mt-4 space-y-3">
+                      {service.points.map((point) => (
+                        <li
+                          key={point}
+                          className="flex items-start gap-3 text-sm leading-6 text-slate-200"
+                        >
+                          <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[#D6B779]" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </details>
+
+              {/* CONTACT LINK */}
+              <div className="mt-auto border-t border-white/20 pt-5">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors hover:text-[#D6B779]"
+                >
+                  Discuss Your Requirements
+                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </Link>
+              </div>
+
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+  </div>
+</section>
+
+
 
       {/* CONSTRUCTION */}
       <section className="bg-[#E9E6DF] py-24 sm:py-28">
@@ -877,7 +847,7 @@ export default function TurnkeyServicesPage() {
       </section>
 
       {/* PROJECT DELIVERY PROCESS */}
-      <section className="bg-white py-24 sm:py-28">
+      {/* <section className="bg-white py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-12">
           <div className="mx-auto mb-16 max-w-3xl text-center">
             <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#A98543]">
@@ -929,7 +899,7 @@ export default function TurnkeyServicesPage() {
             })}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* WHY ARHAM */}
       <section className="bg-[#F5F3EE] py-24 sm:py-28">
